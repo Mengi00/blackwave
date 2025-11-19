@@ -19,7 +19,9 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Users, Edit, Plus, Mail, Phone } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Switch } from "@/components/ui/switch";
+import { UserCog, Edit, Plus, Mail, Phone } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -32,40 +34,39 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { insertCustomerSchema } from "@shared/schema";
+import { insertStaffSchema } from "@shared/schema";
 
-const customerSchema = insertCustomerSchema;
+const staffSchema = insertStaffSchema;
 
-export default function Customers() {
+export default function Staff() {
   const { toast } = useToast();
-  const [editingCustomer, setEditingCustomer] = useState<any>(null);
+  const [editingStaff, setEditingStaff] = useState<any>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
 
-  const { data: customers, isLoading } = useQuery({
-    queryKey: ["/api/customers"],
+  const { data: staff, isLoading } = useQuery({
+    queryKey: ["/api/staff"],
   });
 
   const form = useForm({
-    resolver: zodResolver(customerSchema),
+    resolver: zodResolver(staffSchema),
     defaultValues: {
       name: "",
       email: "",
       phone: "",
-      documentType: "",
-      documentNumber: "",
+      position: "",
+      active: true,
     },
   });
 
   const createMutation = useMutation({
     mutationFn: async (data: any) => {
-      return await apiRequest("POST", "/api/customers", data);
+      return await apiRequest("POST", "/api/staff", data);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/customers"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/stats"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/staff"] });
       toast({
-        title: "Cliente creado",
-        description: "El cliente se ha creado correctamente",
+        title: "Personal creado",
+        description: "El miembro del personal se ha creado correctamente",
       });
       setIsDialogOpen(false);
       form.reset();
@@ -74,41 +75,41 @@ export default function Customers() {
 
   const updateMutation = useMutation({
     mutationFn: async ({ id, data }: { id: string; data: any }) => {
-      return await apiRequest("PATCH", `/api/customers/${id}`, data);
+      return await apiRequest("PATCH", `/api/staff/${id}`, data);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/customers"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/staff"] });
       toast({
-        title: "Cliente actualizado",
-        description: "El cliente se ha actualizado correctamente",
+        title: "Personal actualizado",
+        description: "Los datos se han actualizado correctamente",
       });
       setIsDialogOpen(false);
-      setEditingCustomer(null);
+      setEditingStaff(null);
       form.reset();
     },
   });
 
-  const handleEdit = (customer: any) => {
-    setEditingCustomer(customer);
+  const handleEdit = (staffMember: any) => {
+    setEditingStaff(staffMember);
     form.reset({
-      name: customer.name,
-      email: customer.email || "",
-      phone: customer.phone || "",
-      documentType: customer.documentType || "",
-      documentNumber: customer.documentNumber || "",
+      name: staffMember.name,
+      email: staffMember.email || "",
+      phone: staffMember.phone || "",
+      position: staffMember.position,
+      active: staffMember.active,
     });
     setIsDialogOpen(true);
   };
 
   const handleCreate = () => {
-    setEditingCustomer(null);
+    setEditingStaff(null);
     form.reset();
     setIsDialogOpen(true);
   };
 
   const onSubmit = (data: any) => {
-    if (editingCustomer) {
-      updateMutation.mutate({ id: editingCustomer.id, data });
+    if (editingStaff) {
+      updateMutation.mutate({ id: editingStaff.id, data });
     } else {
       createMutation.mutate(data);
     }
@@ -121,7 +122,7 @@ export default function Customers() {
         <Card>
           <CardContent className="pt-6">
             <div className="space-y-2">
-              {[1, 2, 3, 4, 5].map((i) => (
+              {[1, 2, 3, 4].map((i) => (
                 <Skeleton key={i} className="h-16 w-full" />
               ))}
             </div>
@@ -135,20 +136,20 @@ export default function Customers() {
     <div className="p-4 md:p-8 space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold mb-2" data-testid="text-customers-title">Clientes</h1>
-          <p className="text-muted-foreground">Gestiona tu base de clientes</p>
+          <h1 className="text-3xl font-bold mb-2" data-testid="text-staff-title">Personal</h1>
+          <p className="text-muted-foreground">Gestiona tu equipo de trabajo</p>
         </div>
-        <Button onClick={handleCreate} data-testid="button-add-customer">
+        <Button onClick={handleCreate} data-testid="button-add-staff">
           <Plus className="h-4 w-4 mr-2" />
-          Nuevo Cliente
+          Nuevo Empleado
         </Button>
       </div>
 
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <Users className="h-5 w-5" />
-            Lista de Clientes
+            <UserCog className="h-5 w-5" />
+            Equipo de Trabajo
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -156,46 +157,46 @@ export default function Customers() {
             <TableHeader>
               <TableRow>
                 <TableHead>Nombre</TableHead>
-                <TableHead>Documento</TableHead>
+                <TableHead>Cargo</TableHead>
                 <TableHead>Contacto</TableHead>
-                <TableHead>Registrado</TableHead>
+                <TableHead>Estado</TableHead>
                 <TableHead>Acciones</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {customers?.map((customer: any) => (
-                <TableRow key={customer.id} data-testid={`row-customer-${customer.id}`}>
-                  <TableCell className="font-medium">{customer.name}</TableCell>
-                  <TableCell>
-                    {customer.documentType && customer.documentNumber
-                      ? `${customer.documentType} ${customer.documentNumber}`
-                      : '-'}
-                  </TableCell>
+              {staff?.map((member: any) => (
+                <TableRow key={member.id} data-testid={`row-staff-${member.id}`}>
+                  <TableCell className="font-medium">{member.name}</TableCell>
+                  <TableCell>{member.position}</TableCell>
                   <TableCell>
                     <div className="space-y-1">
-                      {customer.email && (
+                      {member.email && (
                         <div className="flex items-center gap-1 text-sm">
                           <Mail className="h-3 w-3" />
-                          {customer.email}
+                          {member.email}
                         </div>
                       )}
-                      {customer.phone && (
+                      {member.phone && (
                         <div className="flex items-center gap-1 text-sm">
                           <Phone className="h-3 w-3" />
-                          {customer.phone}
+                          {member.phone}
                         </div>
                       )}
                     </div>
                   </TableCell>
                   <TableCell>
-                    {new Date(customer.createdAt).toLocaleDateString('es-CO')}
+                    {member.active ? (
+                      <Badge className="bg-green-600">Activo</Badge>
+                    ) : (
+                      <Badge variant="secondary">Inactivo</Badge>
+                    )}
                   </TableCell>
                   <TableCell>
                     <Button
                       variant="ghost"
                       size="sm"
-                      onClick={() => handleEdit(customer)}
-                      data-testid={`button-edit-customer-${customer.id}`}
+                      onClick={() => handleEdit(member)}
+                      data-testid={`button-edit-staff-${member.id}`}
                     >
                       <Edit className="h-4 w-4" />
                     </Button>
@@ -211,7 +212,7 @@ export default function Customers() {
         <DialogContent>
           <DialogHeader>
             <DialogTitle>
-              {editingCustomer ? "Editar Cliente" : "Nuevo Cliente"}
+              {editingStaff ? "Editar Personal" : "Nuevo Empleado"}
             </DialogTitle>
           </DialogHeader>
           <Form {...form}>
@@ -229,34 +230,19 @@ export default function Customers() {
                   </FormItem>
                 )}
               />
-              <div className="grid grid-cols-2 gap-4">
-                <FormField
-                  control={form.control}
-                  name="documentType"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Tipo de Documento</FormLabel>
-                      <FormControl>
-                        <Input {...field} placeholder="CC, NIT, CE" data-testid="input-document-type" />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="documentNumber"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Número</FormLabel>
-                      <FormControl>
-                        <Input {...field} data-testid="input-document-number" />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
+              <FormField
+                control={form.control}
+                name="position"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Cargo</FormLabel>
+                    <FormControl>
+                      <Input {...field} placeholder="Cajero, Mesero, Chef..." data-testid="input-position" />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
               <FormField
                 control={form.control}
                 name="email"
@@ -283,6 +269,27 @@ export default function Customers() {
                   </FormItem>
                 )}
               />
+              <FormField
+                control={form.control}
+                name="active"
+                render={({ field }) => (
+                  <FormItem className="flex items-center justify-between rounded-lg border p-4">
+                    <div className="space-y-0.5">
+                      <FormLabel className="text-base">Activo</FormLabel>
+                      <div className="text-sm text-muted-foreground">
+                        El empleado está activo en el sistema
+                      </div>
+                    </div>
+                    <FormControl>
+                      <Switch
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                        data-testid="switch-active"
+                      />
+                    </FormControl>
+                  </FormItem>
+                )}
+              />
               <div className="flex gap-2 justify-end">
                 <Button
                   type="button"
@@ -299,7 +306,7 @@ export default function Customers() {
                 >
                   {createMutation.isPending || updateMutation.isPending
                     ? "Guardando..."
-                    : editingCustomer
+                    : editingStaff
                     ? "Actualizar"
                     : "Crear"}
                 </Button>

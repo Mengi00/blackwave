@@ -43,14 +43,11 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
+import { insertProductSchema } from "@shared/schema";
 
-const productSchema = z.object({
-  name: z.string().min(1, "El nombre es requerido"),
-  description: z.string().optional(),
+const productSchema = insertProductSchema.extend({
   price: z.string().min(1, "El precio es requerido"),
   categoryId: z.string().optional(),
-  imageUrl: z.string().optional(),
-  available: z.boolean().default(true),
 });
 
 export default function Products() {
@@ -144,10 +141,16 @@ export default function Products() {
   };
 
   const onSubmit = (data: any) => {
+    const payload = {
+      ...data,
+      price: data.price,
+      categoryId: data.categoryId || null,
+    };
+    
     if (editingProduct) {
-      updateMutation.mutate({ id: editingProduct.id, data });
+      updateMutation.mutate({ id: editingProduct.id, data: payload });
     } else {
-      createMutation.mutate(data);
+      createMutation.mutate(payload);
     }
   };
 
