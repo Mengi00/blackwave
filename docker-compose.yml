@@ -29,7 +29,7 @@ services:
     container_name: restosmart-app
     restart: unless-stopped
     environment:
-      NODE_ENV: sandbox
+      NODE_ENV: ${NODE_ENV}
       PORT: 5000
       DATABASE_URL: postgresql://${POSTGRES_USER:-restosmart}:${POSTGRES_PASSWORD:-restosmart_password}@db:5432/${POSTGRES_DB:-restosmart}
     ports:
