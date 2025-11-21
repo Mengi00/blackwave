@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "NODE_ENV=development tsx server/index.ts",
     "build": "TS_NODE_TRANSPILE_ONLY=1 vite build",
-    "start": "NODE_ENV=production node dist/server/index.js",
+    "start": "NODE_ENV=production node dist/server/index.ts",
     "db:push": "drizzle-kit push"
   },
   "dependencies": {
