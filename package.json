@@ -4,10 +4,11 @@
   "type": "module",
   "license": "MIT",
   "scripts": {
-    "dev": "NODE_ENV=development tsx server/index.ts",
-    "build": "TS_NODE_TRANSPILE_ONLY=1 vite build",
-    "start": "NODE_ENV=production node dist/server/index.ts",
-    "db:push": "drizzle-kit push"
+    "dev": "vite",
+    "build:server": "tsc -p tsconfig.server.json",
+    "build:client": "vite build",
+    "build": "npm run build:server && npm run build:client",
+    "start": "NODE_ENV=production node dist/server/index.js"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",
